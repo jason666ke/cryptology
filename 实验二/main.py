@@ -1,9 +1,5 @@
 import random
 
-import pandas as pd
-import numpy as np
-
-
 def miller_rabin(test_num):
     # 素性检测次数
     safe_time = 10
@@ -75,14 +71,12 @@ def extended_enclid(a, b):
 
 def fast_mul(base, exponent, modulus):
     binary = bin(exponent).replace('0b', '')
-    # print(binary)
 
     exponent_count = 0
     result = 1
     for bit in reversed(binary):
         if int(bit) == 1:
             # 对于第i位为1
-            # result = base^(2^i)
             result *= pow(base, pow(2, exponent_count), modulus)
         exponent_count += 1
     result = result % modulus
@@ -138,41 +132,18 @@ def get_keys_and_prime():
 
 
 def read_and_divide_text(path):
+
     # 文件读取
     file = open(path)
     text = file.read()
-    # print("原始明文信息：")
-    # print(text)
+
     # 将文字转换成数字 (Unicode)
     num_text = []
     for word in text:
-        num_text.append(ord(word))
+        word_num = ord(word)
+        num_text.append(word_num)
 
-    # 将数组变成一个长整数
-    str_text = ""
-    for num in num_text:
-        str_text += str(num)
-
-    # 四个四个分组
-    plaintext_group = []
-    word_group = []
-    for word in str_text:
-        if len(word_group) < 4:
-            word_group.append(word)
-        else:
-            plaintext_group.append(word_group)
-            word_group = []
-
-    # 对明文分组里面的明文进行合并
-    # 存在最高位为0的情况
-    plaintext_num = []
-    for group in plaintext_group:
-        num = 0
-        for num_index in range(len(group)):
-            num += int(group[num_index]) * pow(10, 3 - num_index)
-        plaintext_num.append(num)
-
-    return plaintext_num
+    return num_text
 
 
 def rsa(path):
@@ -193,7 +164,6 @@ def rsa(path):
     for num in plaintext_num_group:
         cipher_num = fast_mul(num, public_key, prime)
         ciphertext_num_group.append(cipher_num)
-    # print(ciphertext_num_group)
 
     return ciphertext_num_group, rsa_info
 
@@ -207,10 +177,26 @@ def de_rsa(private_key, prime, ciphertext_group):
     return plaintext_group
 
 
+def text_recovery(plaintext_group):
+    text_group = ""
+    for num in plaintext_group:
+        code = int(num)
+        word = chr(code)
+        text_group += word
+    with open('解密后得到的明文.txt', 'w', encoding='utf-8') as f:
+        f.write(text_group)
+        f.close()
+    return text_group
+
+
 if __name__ == '__main__':
     # print(fast_mul(2, 20, 100))
     path = r'message/lab2-Plaintext.txt'
     # 获取原始明文信息
+    file = open(path)
+    text = file.read()
+    print("原始明文信息：")
+    print(text)
     plaintext_num_group = read_and_divide_text(path)
     # 加密算法
     ciphertext_num_group, rsa_info = rsa(path)
@@ -223,5 +209,6 @@ if __name__ == '__main__':
     print("原明文为: ")
     print(plaintext_group)
     print("解密后的数据与加密前是否一样:", plaintext_group == plaintext_num_group)
-
+    print("解密后得到的明文：")
+    print(text_recovery(plaintext_group))
 
